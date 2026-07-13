@@ -87,7 +87,8 @@ The available charge models are printed ("MULLIKEN", "LOEWDIN", "HIRSHFELD", "MB
 <img width="2560" height="911" alt="image" src="https://github.com/user-attachments/assets/67c53794-b95d-49a5-b87b-ade95f107817" />
 
 And we see the GFT charge spectrum:
-<img width="2560" height="911" alt="image" src="https://github.com/user-attachments/assets/045dcd97-2b36-4d07-9abe-43e977361336" />
+<img width="780" height="580" alt="image" src="https://github.com/user-attachments/assets/47aaf415-adae-4fac-b6f5-d3cc228b3ce1" />
+
 
 If rdkit struggles with bonding errors, just set ```determine_bo = False ```. 
 
