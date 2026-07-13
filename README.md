@@ -174,9 +174,10 @@ And compare the GFT power spectrum of a polar-nematic former (UIO, top) with a b
 UIO (polar):
 <img width="806" height="220" alt="image" src="https://github.com/user-attachments/assets/05efb40b-e4ba-4c03-a232-166f45f3dc91" />
 OIO (edge-case):
-<img width="806" height="220" alt="image" src="https://github.com/user-attachments/assets/962910eb-f7ba-4f06-83d3-ff537de61482" />
+<img width="780" height="220" alt="image" src="https://github.com/user-attachments/assets/adccb9c2-fae2-48ac-84c0-6d0d10589b12" />
+
 BIO (non-polar, but dipole > 13 Debye):
-<img width="806" height="220" alt="image" src="https://github.com/user-attachments/assets/cf7ce8e2-8d6f-4ec2-afc9-1f3702b5e1b2" />
+<img width="780" height="220" alt="image" src="https://github.com/user-attachments/assets/ca3aa709-51e2-4f55-b675-07195c06fe36" />
 
 
 _This is research code under active development._
