@@ -62,7 +62,7 @@ Generally, we generate conformers with GOAT / GFN2-xTB and then do a single poin
 See examples/UIO_confs for UIO (UUZGU-3-F; see Gibb et al., https://advanced.onlinelibrary.wiley.com/doi/10.1002/adma.73977?af=R) output and xyz files. Single conformer:
 
 ```
-import gft_helpers as gft
+import gft_v2 as gft
 import pandas as pd
 
 dft_path = '/Users/phyrma/orca_sandbox/nf_gft/xIO_mbis'
