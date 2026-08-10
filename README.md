@@ -4,29 +4,50 @@
 The paper by Palacio-Betancur and Jackson (https://pubs.acs.org/doi/10.1021/jacs.5c18760), and the repo by the same authors (https://github.com/TheJacksonLab/PolarNematic) use graph Fourier transform (GFT) analysis of atom-centred molecular charge distributions to predict the presence/absence of polar nematic order. 
 
 <br><br>
-Here, we develop our own implementation of this GFT analysis using atomic partial charges computed with Orca (https://www.faccts.de/docs/orca/6.1/tutorials/prop/charges.html). Our workflow can work with single geometries:
+Here, we develop our own implementation of this GFT analysis using atomic partial charges (and other atom centred properties) computed with Orca (https://www.faccts.de/docs/orca/6.1/tutorials/prop/charges.html). Our workflow can work with single geometries:
 
-``` import gft_helpers as gft
+``` import gft_v2 as gft
 
-result = gft.single_conformer_charge_workflow(
-    xyz_file="example.xyz",
-    out_file="example.out",
-    charge_model="mbis",
-    atom_mode="all",
-    plot=True,
-)
+gft.full_workflow(property_name = 'polar',
+                  property_component = 'iso',
+                  out_file = my_output.out, 
+                  xyz_file = my_xyz.xyz, 
+
+                  atom_mode = 'all',
+                  normalise_eigs = True,
+
+                  #usr_v_max=5,
+                  #usr_v_min = -5,
+                  show_property_values = False,
+                  circle_scale = 200,
+                  cmap = 'bwr')
+
 ```
 
-or multiple conformers generated with ORCA/GOAT (and laid out something like ```compound/conf_000.xyz, conf_000.xyz```):
+or multiple conformers generated with ORCA/GOAT (and laid out something like ```compound/conf_000.xyz, conf_000.xyz``` inside ```directory```):
 
-```result = gft.multi_conformer_charge_workflow(
-    "compound/",
-    xyz_glob="*.xyz",
+```
+result = gft.multi_conformer_workflow(
+    directory,
+	xyz_glob="*.xyz", 
     out_glob="*.out",
-    charge_model="mbis",
-    T=298.15,
-    plot=True,
-)
+    property_name = 'polar',
+    property_component = 'aniso',
+    
+    determine_bo=False,
+    T=298.15, atom_mode="all", 
+        
+    cmap="magma",
+    circle_scale=200, 
+    v_ax_scale=1,
+    normalise_eigs=False,
+    show_atom_indices=True, 
+    show_atom_symbols=True, 
+    show_property_values=False,
+    plot = False, 
+    report = False, 
+    high_freq = 1.2, 
+    v_high_freq =1.98)
 ```
 
 This returns a bunch of ***GFT descriptors** but we don't use these much. Just looking at the power spectrum is _sometimes_ enough to discern polar versus non polar, nematic vs smectic. 
@@ -97,7 +118,7 @@ gft_helpers can look at multiple conformers with a single function call:
 dft_path = '/Users/phyrma/orca_sandbox/nf_gft/xIO_mbis'
 
 d = f'{dft_path}/{d}'
-_ = gft.multi_conformer_charge_workflow(
+_ = gft.multi_conformer_workflow(
     d, xyz_glob="*.xyz", 
     out_glob="*.out",
     charge_model="resp", 
@@ -135,7 +156,7 @@ directories = glob.glob(f'{dft_path}/*/')
 rows = []
 
 for d in directories:
-    result  = gft.multi_conformer_charge_workflow(
+    result  = gft.multi_conformer_workflow(
     d, xyz_glob="*.xyz", 
     out_glob="*.out",
     charge_model="mbis", 
