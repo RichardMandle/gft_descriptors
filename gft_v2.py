@@ -22,7 +22,7 @@ from rdkit.Chem import AllChem, rdDetermineBonds
 from scipy import constants
 HARTREE_TO_KJMOL = constants.physical_constants['Hartree energy'][0] * constants.Avogadro / 1000 # Ha --> kJ mol; factor of 1000, J --> kJ mol!
 R_GAS = constants.gas_constant
-DIPOLE_AU_TO_DEBYE = cst.physical_constants['atomic unit of electric dipole mom.'][0] * cst.c * 10e20
+DIPOLE_AU_TO_DEBYE = constants.physical_constants['atomic unit of electric dipole mom.'][0] * constants.c * 10e20
 
 _FLOAT = r"[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[EeDd][+-]?\d+)?"
 
@@ -130,37 +130,55 @@ class AtomPropertyData:
 
     def resolve_component(self, component: str | None = None) -> str:
         '''
-        resolve component aliases and return the canonical scalar component name
+        Resolve component aliases and return the canonical scalar component name.
         '''
-        
+    
         key = self.default_component if component is None else component.lower()
-        
+    
         aliases = {
             "charge": "value",
             "q": "value",
             "isotropic": "iso",
             "alpha_iso": "iso",
+    
+            "anisotropy": "aniso",
+            "alpha_aniso": "aniso",
         }
-        
+    
         key = aliases.get(key, key)
-        if key == "trace" and self.name == "atompol":
+
+        #NEW - work with anisotropic polarisability.
+        if key in {"trace", "aniso"} and self.name == "atompol":
             return key
+    
         if key in self.components:
             return key
+    
         raise KeyError(
             f"Component {component!r} is unavailable for {self.name}. "
             f"Available components: {', '.join(self.available_components)}"
         )
 
-    def scalar(self, component: str | None = None, *, copy: bool = True) -> np.ndarray:
+    def scalar(self, component: str | None = None, *, copy: bool = True,) -> np.ndarray:
         '''
-        get one scalar atomic signal suitable for a conventional GFT
+        Get one scalar atomic signal suitable for a conventional GFT.
         '''
+    
         key = self.resolve_component(component)
+    
         if key == "trace":
-            values = self.components["xx"] + self.components["yy"] + self.components["zz"]
+            values = (
+                self.components["xx"]
+                + self.components["yy"]
+                + self.components["zz"]
+            )
+    
+        elif key == "aniso":
+            values = calc_aniso(self.tensor)
+    
         else:
             values = self.components[key]
+    
         return values.copy() if copy else values
 
     @property
@@ -237,6 +255,54 @@ def canonical_property_name(property_name: str) -> str:
             f"Expected one of: {', '.join(allowed)}, or 'auto'."
         ) from exc
 
+
+def calc_aniso(tensor):
+    '''
+    Calculate the rotationally invariant anisotropy of a 3x3
+    polarizability tensor.
+
+    Accepts either:
+        (3, 3)
+    or
+        (..., 3, 3)
+
+    Returns a scalar or an array with shape tensor.shape[:-2].
+
+    Definition:
+        Δα = sqrt(3/2 * ||α - α_iso I||_F^2)
+
+    Equivalent to:
+        sqrt(1/2 * [
+            (axx-ayy)^2 + (ayy-azz)^2 + (azz-axx)^2
+            + 6*(axy^2 + axz^2 + ayz^2)
+        ])
+    '''
+    tensor = np.asarray(tensor, dtype=float)
+
+    if tensor.shape[-2:] != (3, 3):
+        raise ValueError(
+            f"Expected tensor shape (..., 3, 3), got {tensor.shape}"
+        )
+
+    # NOTE -> static polarizability should be symmetric, but we might get a little asymmetry from numerical noise, so 
+    # cancel that out with np.swapaxes
+    tensor = 0.5 * (tensor + np.swapaxes(tensor, -1, -2))
+
+    alpha_iso = np.trace(
+        tensor,
+        axis1=-2,
+        axis2=-1,
+    ) / 3.0
+
+    identity = np.eye(3)
+
+    traceless = tensor - alpha_iso[..., None, None] * identity
+
+    aniso = np.sqrt(
+        1.5 * np.sum(traceless**2, axis=(-2, -1))
+    )
+
+    return aniso
 
 def _orca_float(value: str) -> float:
     return float(value.replace("D", "E").replace("d", "e"))
@@ -1214,7 +1280,11 @@ def run_orca_gft_workflow(
     assert used_property_name is not None
     assert used_component is not None
 
-    if used_property_name == "atompol" and used_component not in {"iso", "trace"} and len(conformers) > 1:
+    if (
+        used_property_name == "atompol"
+        and used_component not in {"iso", "trace", "aniso"}
+        and len(conformers) > 1
+    ):
         warnings.warn(
             f"Atomic polarizability component {used_component!r} is frame-dependent. "
             "Conformer averaging is only physically meaningful if all geometries use a "
