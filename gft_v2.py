@@ -1760,6 +1760,25 @@ def plot_gft(
     fig.tight_layout()
     return fig
 
+def quick_eig_plot(eigs: Sequence[float],
+    sig: Sequence[float],
+    title: str = "Power Spectrum - GFT",
+    figsize: tuple[float, float] = (6, 2),
+    dpi: int = 200,
+):
+    '''
+    simple quick plotter of sig vs eigs with minimal options. 
+    used for just exploring stuff.
+    '''
+    fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+    ax.plot(eigs, sig, label = '', color = 'r', linewidth=2)
+    ax.set_xlabel(r"Eigenvalue ($\lambda$)")
+    ax.set_ylabel(r"$|C_k|^2$")
+    ax.set_title(title)
+    fig.tight_layout()
+    plt.show()
+    return fig
+
 
 def plot_gft_mode_contribution(
     mol: Chem.Mol,
