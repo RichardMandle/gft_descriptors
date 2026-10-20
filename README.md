@@ -52,6 +52,40 @@ result = gft.multi_conformer_workflow(
 
 This returns a bunch of ***GFT descriptors** but we don't use these much. Just looking at the power spectrum is _sometimes_ enough to discern polar versus non polar, nematic vs smectic. 
 
+<br><br>
+
+Or if we want to parse multiple conformers for multiple molecules, and record the data into a pandas dataframe, we do it like this:
+```
+dft_path = "/Users/phyrma/orca_sandbox/nf_gft/bp4_cpds"
+directories = glob.glob(f'{dft_path}/*/')
+
+rows = []
+
+for d in directories:
+    result = gft.multi_conformer_workflow(
+    d, xyz_glob="*.xyz", 
+    out_glob="*.out",
+    property_name="resp", 
+    determine_bo=False,
+    T=298.15, atom_mode="all", 
+    cmap="plasma",
+    circle_scale=200, 
+    v_ax_scale=1,
+    normalise_eigs=False,
+    show_atom_indices=True, 
+    show_atom_symbols=True, 
+    show_property_values=False,
+    plot = False, 
+    report = False)
+
+    rows.append(gft.parse_key_results(result, results_key = 'features_from_weighted_property_values', multi = True))
+
+df = pd.DataFrame(rows, columns=gft.get_cols())
+
+df.head()
+```
+
+Note here that when using gft.parse_key_results we pass the ```multi=True``` flag, and we specify the results key as using the ```features_from_weighted_property_values```, which uses the SCF energy of each conformer to calculate the weights. There is no machinery to check for degeneracy here, the code assumes you are passing unique conformers.<br><br>
 
 ## Installation
 I just used Conda: 
