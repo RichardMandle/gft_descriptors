@@ -177,7 +177,7 @@ for d in directories:
     plt_v_min=-0.4)
     
     print(d)
-    quick_eig_plot(eigs = result['eigenvalues'], sig = result['population_average_power_spectrum'])
+    _ = gft.quick_eig_plot(eigs = result['eigenvalues'], sig = result['population_average_power_spectrum'])
     
     rows.append(gft.parse_key_results(result, results_key = 'features_from_population_average_power', multi = True))
     
